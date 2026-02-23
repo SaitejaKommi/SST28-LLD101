@@ -1,12 +1,22 @@
 import java.util.*;
 
-public class FileStore {
+/**
+ * In-memory persistence. Swap for a DB-backed store by writing a new
+ * InvoiceStore impl.
+ */
+public class FileStore implements InvoiceStore {
     private final Map<String, String> files = new HashMap<>();
 
-    public void save(String name, String content) { files.put(name, content); }
+    @Override
+    public void save(String name, String content) {
+        files.put(name, content);
+    }
+
+    @Override
     public int countLines(String name) {
         String c = files.getOrDefault(name, "");
-        if (c.isEmpty()) return 0;
+        if (c.isEmpty())
+            return 0;
         return c.split("\n").length;
     }
 }
