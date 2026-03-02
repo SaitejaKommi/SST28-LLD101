@@ -1,9 +1,4 @@
+// Marker interface for registering classroom devices
 public interface SmartClassroomDevice {
-    // Fat interface (ISP violation)
-    void powerOn();
-    void powerOff();
-    void setBrightness(int pct);
-    void setTemperatureC(int c);
-    int scanAttendance();
-    void connectInput(String port);
+    // No methods - this is a marker interface for device registry
 }
