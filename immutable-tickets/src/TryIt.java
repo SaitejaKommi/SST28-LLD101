@@ -1,34 +1,41 @@
 import com.example.tickets.IncidentTicket;
 import com.example.tickets.TicketService;
-
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Starter demo that shows why mutability is risky.
+ * Demo showing immutable ticket design with Builder pattern.
  *
- * After refactor:
- * - direct mutation should not compile (no setters)
- * - external modifications to tags should not affect the ticket
- * - service "updates" should return a NEW ticket instance
+ * - No direct mutation of tickets (no setters)
+ * - External modifications to original tags list don't affect the ticket
+ * - Service "updates" return NEW ticket instances
  */
 public class TryIt {
 
     public static void main(String[] args) {
         TicketService service = new TicketService();
 
-        IncidentTicket t = service.createTicket("TCK-1001", "reporter@example.com", "Payment failing on checkout");
-        System.out.println("Created: " + t);
+        IncidentTicket t1 = service.createTicket("TCK-1001", "reporter@example.com", "Payment failing on checkout");
+        System.out.println("Created: " + t1);
 
-        // Demonstrate post-creation mutation through service
-        service.assign(t, "agent@example.com");
-        service.escalateToCritical(t);
-        System.out.println("\nAfter service mutations: " + t);
+        // Demonstrate immutable updates through service (returns new instance)
+        IncidentTicket t2 = service.assign(t1, "agent@example.com");
+        System.out.println("\nAfter assigning agent: " + t2);
+        System.out.println("Original unchanged: " + t1);
 
-        // Demonstrate external mutation via leaked list reference
-        List<String> tags = t.getTags();
-        tags.add("HACKED_FROM_OUTSIDE");
-        System.out.println("\nAfter external tag mutation: " + t);
+        // Escalate to critical (again returns new instance)
+        IncidentTicket t3 = service.escalateToCritical(t2);
+        System.out.println("\nAfter escalation: " + t3);
+        System.out.println("Previous version unchanged: " + t2);
 
-        // Starter compiles; after refactor, you should redesign updates to create new objects instead.
+        // Demonstrate that external modifications don't affect the ticket
+        System.out.println("\nTesting immutability of tags list:");
+        List<String> externalTags = new ArrayList<>(t3.getTags());
+        externalTags.add("HACKED_FROM_OUTSIDE");
+        System.out.println("External list after mutation: " + externalTags);
+        System.out.println("Ticket tags unchanged: " + t3.getTags());
+
+        // Note: Attempting t3.getTags().add(...) would throw UnsupportedOperationException
+        // because getTags() returns an unmodifiable list
     }
 }

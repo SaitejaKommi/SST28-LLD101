@@ -4,49 +4,50 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Service layer that creates tickets.
+ * Service layer that creates and manages tickets immutably.
  *
- * CURRENT STATE (BROKEN ON PURPOSE):
- * - creates partially valid objects
- * - mutates after creation (bad for auditability)
- * - validation is scattered & incomplete
- *
- * TODO (student):
- * - After introducing immutable IncidentTicket + Builder, refactor this to stop mutating.
+ * Now uses Builder pattern for construction and returns new instances
+ * instead of mutating existing tickets.
  */
 public class TicketService {
 
+    /**
+     * Create a new ticket with required fields and sensible defaults.
+     */
     public IncidentTicket createTicket(String id, String reporterEmail, String title) {
-        // scattered validation (incomplete on purpose)
-        if (id == null || id.trim().isEmpty()) throw new IllegalArgumentException("id required");
-        if (reporterEmail == null || !reporterEmail.contains("@")) throw new IllegalArgumentException("email invalid");
-        if (title == null || title.trim().isEmpty()) throw new IllegalArgumentException("title required");
-
-        IncidentTicket t = new IncidentTicket(id, reporterEmail, title);
-
-        // BAD: mutating after creation
-        t.setPriority("MEDIUM");
-        t.setSource("CLI");
-        t.setCustomerVisible(false);
-
-        List<String> tags = new ArrayList<>();
-        tags.add("NEW");
-        t.setTags(tags);
-
-        return t;
+        return new IncidentTicket.Builder()
+                .id(id)
+                .reporterEmail(reporterEmail)
+                .title(title)
+                .priority("MEDIUM")
+                .source("CLI")
+                .customerVisible(false)
+                .build();
     }
 
-    public void escalateToCritical(IncidentTicket t) {
-        // BAD: mutating ticket after it has been "created"
-        t.setPriority("CRITICAL");
-        t.getTags().add("ESCALATED"); // list leak
+    /**
+     * Return a new ticket instance with critical priority and escalation tag.
+     * The original ticket is unchanged.
+     */
+    public IncidentTicket escalateToCritical(IncidentTicket t) {
+        List<String> escalatedTags = new ArrayList<>(t.getTags());
+        escalatedTags.add("ESCALATED");
+
+        return new IncidentTicket.Builder()
+                .from(t)
+                .priority("CRITICAL")
+                .tags(escalatedTags)
+                .build();
     }
 
-    public void assign(IncidentTicket t, String assigneeEmail) {
-        // scattered validation
-        if (assigneeEmail != null && !assigneeEmail.contains("@")) {
-            throw new IllegalArgumentException("assigneeEmail invalid");
-        }
-        t.setAssigneeEmail(assigneeEmail);
+    /**
+     * Return a new ticket instance with the assignee set.
+     * The original ticket is unchanged.
+     */
+    public IncidentTicket assign(IncidentTicket t, String assigneeEmail) {
+        return new IncidentTicket.Builder()
+                .from(t)
+                .assigneeEmail(assigneeEmail)
+                .build();
     }
 }
